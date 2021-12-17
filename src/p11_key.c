@@ -586,6 +586,7 @@ static int pkcs11_init_key(PKCS11_CTX *ctx, PKCS11_TOKEN *token,
 
 	if (ret)
 		*ret = key;
+
 	return 0;
 }
 

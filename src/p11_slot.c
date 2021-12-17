@@ -477,9 +477,19 @@ static int pkcs11_init_slot(PKCS11_CTX *ctx, PKCS11_SLOT *slot, CK_SLOT_ID id)
 	slot->removable = (info.flags & CKF_REMOVABLE_DEVICE) ? 1 : 0;
 	slot->_private = spriv;
 
-	if ((info.flags & CKF_TOKEN_PRESENT) && pkcs11_check_token(ctx, slot))
+	if ((info.flags & CKF_TOKEN_PRESENT) && pkcs11_check_token(ctx, slot)) {
+		if (spriv) {
+			if (spriv->prev_pin) {
+				OPENSSL_cleanse(spriv->prev_pin, strlen(spriv->prev_pin));
+				OPENSSL_free(spriv->prev_pin);
+			}
+			CRYPTOKI_call(ctx, C_CloseAllSessions(spriv->id));
+			OPENSSL_free(spriv->session_pool);
+			pthread_mutex_destroy(&spriv->lock);
+			pthread_cond_destroy(&spriv->cond);
+		}
 		return -1;
-
+	}
 	return 0;
 }
 
